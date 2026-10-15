@@ -10,13 +10,22 @@ canal = grpc.insecure_channel("localhost:50053")
 stub = resenas_pb2_grpc.ResenasStub(canal)
 
 print("=== Parte 1 · PromedioProducto con un dato válido ===")
-# TODO: arma la petición con un dato que funcione (tabla "Datos para probar" del README del vecino),
-#       llama a stub.PromedioProducto(...) e imprime los campos de la respuesta.
+peticion_valida = resenas_pb2.ResenaRequest(clave="P001")
+respuesta_valida = stub.PromedioProducto(peticion_valida)
+print(f"Producto: {respuesta_valida.clave} | Promedio: {respuesta_valida.promedio} | Total reseñas: {respuesta_valida.total}")
 
-print("=== Parte 2 · PromedioProducto con un dato que provoca error ===")
-# TODO: llama con un dato que provoque error, dentro de try/except grpc.RpcError,
-#       e imprime e.code() y e.details(). El programa NO debe tronar.
+print("\n=== Parte 2 · PromedioProducto con un dato que provoca error ===")
+peticion_invalida = resenas_pb2.ResenaRequest(clave="P999")
+try:
+    stub.PromedioProducto(peticion_invalida)
+except grpc.RpcError as e:
+    print(f"Error esperado - Código: {e.code().name}")
+    print(f"Detalles: {e.details()}")
 
-print("=== Parte 3 · ListarResenas (streaming) ===")
-# TODO: recorre stub.ListarResenas(...) con for e imprime cada caja en cuanto llegue.
-#       Ponlo también dentro de try/except por si el servidor regresa un error.
+print("\n=== Parte 3 · ListarResenas (streaming) ===")
+try:
+    for resena in stub.ListarResenas(peticion_valida):
+        print(f"[{resena.estrellas} estrellas] {resena.autor}: {resena.comentario}")
+except grpc.RpcError as e:
+    print(f"Error en streaming - Código: {e.code().name}")
+    print(f"Detalles: {e.details()}")
